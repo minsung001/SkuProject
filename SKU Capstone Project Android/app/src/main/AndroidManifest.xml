@@ -33,9 +33,6 @@
             android:name=".report"
             android:exported="false" />
         <activity
-            android:name=".equipmentcontrol"
-            android:exported="false" />
-        <activity
             android:name=".policy"
             android:exported="false" />
         <activity

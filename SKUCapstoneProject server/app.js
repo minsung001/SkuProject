@@ -11,13 +11,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // [라우터 연결]
-const loginRouter = require('./src/routes/authRoutes'); 
+const authRouter = require('./src/routes/authRoutes'); // 변수명을 용도에 맞게 authRouter로 변경했습니다.
 
-// ❗ 아직 chat.js 파일이 없으므로, 에러 방지를 위해 아래 두 줄을 주석 처리했습니다.
-// const chatRouter = require('./src/routes/chat'); 
-// app.use('/chat', chatRouter); 
-
-app.use('/login', loginRouter);
+// ❗ 안드로이드 ApiService의 @POST("/auth/...") 경로와 일치하도록 수정
+// 기존 '/login'을 '/auth'로 변경하였습니다.
+app.use('/auth', authRouter);
 
 // 기본 접속 테스트
 app.get('/', (req, res) => {
