@@ -20,12 +20,12 @@ public class AuthModels {
         }
     }
 
-    // 3. 회원가입용 (서버가 요구하는 4가지 데이터)
+    // 3. 회원가입용
     public static class SignupRequest {
         String email;
         String username;
         String password;
-        boolean consent; // 서버에서 consent !== true 체크하므로 반드시 true로 보낼 것
+        boolean consent;
 
         public SignupRequest(String email, String username, String password, boolean consent) {
             this.email = email;
@@ -35,7 +35,7 @@ public class AuthModels {
         }
     }
 
-    // 4. 로그인용 (username과 password 보냄)
+    // 4. 로그인용
     public static class LoginRequest {
         String username;
         String password;
@@ -52,5 +52,25 @@ public class AuthModels {
         @SerializedName("accessToken") public String accessToken;
         @SerializedName("refreshToken") public String refreshToken;
         @SerializedName("userId") public String userId;
+    }
+
+    // -----------------------------------------------------------
+    // 6. [새로 추가] 복지 정책 데이터 응답용 모델
+    // -----------------------------------------------------------
+    public static class PolicyResponse {
+        @SerializedName("서비스명")
+        public String title;
+
+        @SerializedName("서비스요약")
+        public String summary;
+
+        @SerializedName("소관부처명")
+        public String department;
+
+        @SerializedName("소관조직명")
+        public String subDepartment;
+
+        @SerializedName("서비스URL")
+        public String url;
     }
 }
