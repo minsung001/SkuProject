@@ -63,30 +63,48 @@ exports.verifyCode = async (req, res) => {
   }
 };
 
+
 // 3. 회원가입
 exports.signup = async (req, res) => {
   try {
-    const { email, username, password, consent } = req.body;
-    if (!email || !username || !password || consent !== true) {
+    const { email, username, password, consent, babyBirth } = req.body;
+
+    // ✅ A: babyBirth까지 필수로 강제
+    if (!email || !username || !password || consent !== true || !babyBirth) {
       return res.status(400).json({ ok: false, message: "missing fields" });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedUsername = username.toLowerCase().trim();
 
+    // ✅ babyBirth 형식 검증 & Date 변환
+    // Android에서는 "YYYY-MM-DD" 또는 ISO 문자열 추천
+    const babyBirthDate = new Date(babyBirth);
+    if (isNaN(babyBirthDate.getTime())) {
+      return res.status(400).json({ ok: false, message: "invalid babyBirth format" });
+    }
+
     const verified = await EmailVerify.findOne({ email: normalizedEmail, verified: true });
     if (!verified) return res.status(403).json({ ok: false, message: "email not verified" });
 
-    if (await User.findOne({ email: normalizedEmail })) return res.status(409).json({ ok: false, message: "email exists" });
-    if (await User.findOne({ username: normalizedUsername })) return res.status(409).json({ ok: false, message: "username exists" });
+    if (await User.findOne({ email: normalizedEmail })) {
+      return res.status(409).json({ ok: false, message: "email exists" });
+    }
+    if (await User.findOne({ username: normalizedUsername })) {
+      return res.status(409).json({ ok: false, message: "username exists" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
+
     const user = await User.create({
       email: normalizedEmail,
       username: normalizedUsername,
       passwordHash,
       verified: true,
       consentAt: new Date(),
+
+      // ✅ 추가 저장
+      babyBirth: babyBirthDate,
     });
 
     await Guardian.create({ ownerId: user._id, memberId: user._id, role: "OWNER" });
@@ -98,6 +116,7 @@ exports.signup = async (req, res) => {
     return res.status(500).json({ ok: false, message: e.message });
   }
 };
+
 
 // 4. 로그인
 exports.login = async (req, res) => {
