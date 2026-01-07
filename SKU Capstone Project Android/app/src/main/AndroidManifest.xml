@@ -14,9 +14,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication1"
         android:usesCleartextTraffic="true">
+
         <activity
-            android:name=".policyAdapter"
+            android:name=".policyDetail"
             android:exported="false" />
+
         <activity
             android:name=".userexplore"
             android:exported="false" />
@@ -50,12 +52,12 @@
         <activity
             android:name=".Menuactivity"
             android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

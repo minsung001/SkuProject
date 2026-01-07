@@ -1,5 +1,6 @@
 package com.example.myapplication1;
 
+import android.content.Intent; // 💡 1. Intent 임포트 추가
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ public class policyAdapter extends RecyclerView.Adapter<policyAdapter.ViewHolder
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // 💡 layout 파일명이 activity_policy_adapter가 맞는지 다시 한번 확인하세요!
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_policy_adapter, parent, false);
         return new ViewHolder(view);
     }
@@ -29,6 +31,14 @@ public class policyAdapter extends RecyclerView.Adapter<policyAdapter.ViewHolder
         holder.tvTitle.setText(policy.title);
         holder.tvSummary.setText(policy.summary);
         holder.tvDept.setText(policy.department);
+
+        // 💡 2. 클릭 리스너 추가: 항목을 클릭하면 상세 페이지(policyDetail)로 이동
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), policyDetail.class);
+            // 💡 데이터를 'policy_data'라는 이름으로 담아서 보냅니다.
+            intent.putExtra("policy_data", policy);
+            v.getContext().startActivity(intent);
+        });
     }
 
     @Override

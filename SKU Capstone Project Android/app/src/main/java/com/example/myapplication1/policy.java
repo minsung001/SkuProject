@@ -5,6 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull; // 추가
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -23,10 +24,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class policy extends AppCompatActivity {
 
-    private static final String TAG = "PolicyActivity_Debug"; // 로그 태그 정의
+    private static final String TAG = "PolicyActivity_Debug";
     private RecyclerView recyclerView;
     private policyAdapter adapter;
     private List<AuthModels.PolicyResponse> policyList = new ArrayList<>();
+
+    // 페이징을 위한 변수 (나중에 사용)
+    private int currentPage = 1;
+    private boolean isLoading = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,27 +39,51 @@ public class policy extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_policy);
 
-        // 1. 뷰 초기화
         recyclerView = findViewById(R.id.recyclerView);
         if (recyclerView == null) {
             Log.e(TAG, "에러: XML에서 recyclerView를 찾을 수 없습니다.");
         } else {
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+            recyclerView.setLayoutManager(layoutManager);
+
+            // 💡 [스크롤 리스너 추가] 리스트의 끝을 감지합니다.
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+
+                    // dy > 0 은 아래로 스크롤 중임을 의미합니다.
+                    if (dy > 0) {
+                        int visibleItemCount = layoutManager.getChildCount();
+                        int totalItemCount = layoutManager.getItemCount();
+                        int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                        // 바닥에 거의 다다랐는지 확인 (마지막 아이템이 보일 때)
+                        if (!isLoading) {
+                            if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
+                                    && firstVisibleItemPosition >= 0) {
+
+                                Log.d(TAG, "리스트의 끝에 도달했습니다!");
+                                // 여기서 loadMoreData() 같은 함수를 실행하여 데이터를 더 가져올 수 있습니다.
+                                // Toast.makeText(policy.this, "마지막 페이지입니다.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+            });
         }
 
-        // 시스템바 인셋 설정
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // 2. 서버 데이터 호출
         fetchPolicies();
     }
 
     private void fetchPolicies() {
-        // 에뮬레이터 접속 주소 (안드로이드 공식 Localhost 우회 IP)
+        isLoading = true;
         String BASE_URL = "http://10.0.2.2:3000/";
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -64,37 +93,26 @@ public class policy extends AppCompatActivity {
 
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Log.d(TAG, "서버에 데이터 요청을 시작합니다. URL: " + BASE_URL + "api/policies");
-
         apiService.getPolicies().enqueue(new Callback<List<AuthModels.PolicyResponse>>() {
             @Override
             public void onResponse(Call<List<AuthModels.PolicyResponse>> call, Response<List<AuthModels.PolicyResponse>> response) {
-                // HTTP 응답 코드 확인 (200 OK 등)
-                Log.d(TAG, "응답 코드: " + response.code());
-
+                isLoading = false;
                 if (response.isSuccessful() && response.body() != null) {
                     policyList = response.body();
 
                     if (policyList.isEmpty()) {
-                        Log.w(TAG, "성공했으나 서버에서 보낸 데이터가 비어있습니다(size 0).");
                         Toast.makeText(policy.this, "등록된 정책이 없습니다.", Toast.LENGTH_SHORT).show();
                     } else {
-                        Log.d(TAG, "데이터 로드 성공! 개수: " + policyList.size());
-                        // 3. 어댑터 연결
                         adapter = new policyAdapter(policyList);
                         recyclerView.setAdapter(adapter);
                     }
-                } else {
-                    Log.e(TAG, "서버 응답 에러 발생: " + response.message());
-                    Toast.makeText(policy.this, "서버 응답 에러: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<AuthModels.PolicyResponse>> call, Throwable t) {
-                // 네트워크 연결 자체가 실패한 경우 (주소 오타, 서버 꺼짐, 권한 부족 등)
-                Log.e(TAG, "네트워크 통신 실패! 원인: " + t.getMessage());
-                Toast.makeText(policy.this, "서버 연결에 실패했습니다.", Toast.LENGTH_LONG).show();
+                isLoading = false;
+                Log.e(TAG, "네트워크 통신 실패: " + t.getMessage());
             }
         });
     }

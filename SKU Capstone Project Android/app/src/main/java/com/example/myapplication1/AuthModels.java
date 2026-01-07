@@ -57,19 +57,15 @@ public class AuthModels {
     // -----------------------------------------------------------
     // 6. [새로 추가] 복지 정책 데이터 응답용 모델
     // -----------------------------------------------------------
-    public static class PolicyResponse {
+    public static class PolicyResponse implements java.io.Serializable { // 💡 Serializable 추가
         @SerializedName("서비스명")
         public String title;
-
         @SerializedName("서비스요약")
         public String summary;
-
         @SerializedName("소관부처명")
         public String department;
-
         @SerializedName("소관조직명")
         public String subDepartment;
-
         @SerializedName("서비스URL")
         public String url;
     }
